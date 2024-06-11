@@ -5,9 +5,9 @@
       <div class="dot"></div>
       <div class="dot"></div>
     </div>
-    <div class="menu" v-if="showMenu">
+    <div class="card-menu" v-if="showMenu">
       <div @click="edit">Edit</div>
-      <div @click="$emit('delete-card')">Delete</div>
+      <div @click="deleteCard">Delete</div> <!-- Agrega el manejador de eventos para la opción "Delete" -->
     </div>
     <input type="text" placeholder="Place your title here" class="title-input" v-model="localCardData.title" @input="emitUpdate">
     <textarea placeholder="Add here your description" class="description-textarea" v-model="localCardData.description" @input="resizeTextarea"></textarea>
@@ -76,7 +76,8 @@ export default {
       dropdownCardMenuVisibility: false,
       cardOptionsVisibility: false,
       areCardInputsEnabled: true,
-      dropdownButtonVisible: true,
+      showMenu: false,
+      dropdownButtonVisible: false,
       localTags: this.tags.slice(),
     };
   },
@@ -88,11 +89,7 @@ export default {
       this.emitUpdate(); // Emit update when resizing textarea (description change)
     },
     toggleMenu() {
-      this.areCardInputsEnabled = !this.areCardInputsEnabled;
-      this.$refs.card.querySelector('.title-input').disabled = !this.areCardInputsEnabled;
-      this.$refs.card.querySelector('.description-textarea').disabled = !this.areCardInputsEnabled;
-      this.cardOptionsVisibility = this.$refs.card.querySelector('.title-input').disabled;
-      this.dropdownButtonVisible = !this.localCardData.selectedTags.length > 0;
+      this.showMenu = !this.showMenu;
     },
     handleClickOutside(event) {
       if (this.$refs.card && !this.$refs.card.contains(event.target)) {
@@ -116,7 +113,6 @@ export default {
         this.localTags.push(newTag);
         this.$emit('update-tags', this.localTags);
       }
-      this.dropdownButtonVisible = !this.localCardData.selectedTags.length > 0;
     },
     removeTag(tag) {
       const index = this.tags.indexOf(tag);
@@ -128,7 +124,6 @@ export default {
         this.localCardData.selectedTags.splice(indexSelected, 1);
       }
       this.$emit('update-tags', this.localTags);
-      this.dropdownButtonVisible = !this.localCardData.selectedTags.length > 0;
     },
     toggleTagSelection(tag) {
       const index = this.localCardData.selectedTags.findIndex(t => t.name === tag.name);
@@ -138,7 +133,6 @@ export default {
         this.localCardData.selectedTags.push(tag); // Select the tag
       }
       this.emitUpdate();
-      this.dropdownButtonVisible = !this.localCardData.selectedTags.length > 0;
 
     },
     isSelected(tag) {
@@ -146,6 +140,17 @@ export default {
     },
     emitUpdate() {
       this.$emit('update-card', { ...this.localCardData });
+    },
+    deleteCard() {
+    // Emitir un evento para notificar al componente padre que se debe eliminar la tarjeta
+    this.$emit('delete-card');
+    },
+    edit(){
+      this.areCardInputsEnabled = !this.areCardInputsEnabled;
+      this.$refs.card.querySelector('.title-input').disabled = !this.areCardInputsEnabled;
+      this.$refs.card.querySelector('.description-textarea').disabled = !this.areCardInputsEnabled;
+      this.cardOptionsVisibility = this.$refs.card.querySelector('.title-input').disabled;
+      this.dropdownButtonVisible = true;
     }
   },
   watch: {
@@ -263,6 +268,21 @@ export default {
 }
 
 .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin: 10px;
+  z-index: 1000;
+  background-color: #ffffff;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: 350px; /* Set a max-height */
+  overflow: hidden; /* Ensure the content is hidden when scrolling */
+}
+
+.card-menu {
   position: absolute;
   top: 100%;
   left: 0;
